@@ -1,40 +1,53 @@
 package compiladoreslab1;
 
-import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AnalisadorLexico {
 
-    public static final int S0 = 0;
-    public static final int S1 = 1;
-    public static final int S2 = 2;
-    public static final int S3 = 3;
-    public static final int S4 = 4;
-    public static final int S5 = 5;
-    public static final int S6 = 6;
-    public static final int S7 = 7;
-    public static final int SL = 10;
+    private static final int S0 = 0;
+    private static final int S1 = 1;
+    private static final int S2 = 2;
+    private static final int S3 = 3;
+    private static final int S4 = 4;
+    private static final int S5 = 5;
+    private static final int S6 = 6;
+    private static final int S7 = 7;
+    private static final int SL = 10;
 
     private String fileContent;
     private int index;
     private int estado;
+    private boolean _verbose;
+
+    private List<Token> _tokens;
+
+    public AnalisadorLexico(String chain, boolean verbose) {
+        this(chain);
+        _verbose = verbose;
+}
 
     public AnalisadorLexico(String chain) {
-        try {
-            //FileReader f = new FileReader(new File(fileName));
-            //BufferedReader br = new BufferedReader(f);
-            //String linha;
-            //StringBuilder fContent = new StringBuilder();
-            //fContent = new StringBuilder();
-            //while ((linha = br.readLine()) != null) {
-            //    fContent.append(linha);
-            //}
-            //fileContent = fContent.toString() + '\0';  // forcei o caractere fim de arquivo
-            fileContent = chain + '\0';
-            index = 0;
-            estado = S0;
-        } catch (Exception ex) {
-            System.err.println("Erro ao abrir arquivo");
+        fileContent = chain + '\0';
+        index = 0;
+        estado = S0;
+        _tokens = new ArrayList<>();
+    }
+
+    public List<Token> getTokens() {
+        while (!isEOF()) {
+            Token t = nextToken();
+            if (t != null) {
+                if (_verbose) {
+                    System.out.println("Reconhecido " + t.getCode() + "  " + t.getSymbol());
+                }
+                _tokens.add(t);
+            } else {
+                throw new IllegalArgumentException("Token invalido");
+            }
         }
+        System.out.println("Analise Léxica concluída com sucesso.");
+        return _tokens;
     }
 
     private char nextChar() {
@@ -53,15 +66,15 @@ public class AnalisadorLexico {
         return ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'));
     }
 
-    public void retroceder() {
+    private void retroceder() {
         index--;
     }
 
-    public boolean isEOF() {
-        return (index == fileContent.length());
+    private boolean isEOF() {
+        return (index == fileContent.length() - 1);
     }
 
-    public Token nextToken() {
+    private Token nextToken() {
         String symbol = "";
         estado = S0;
         Token token;
@@ -102,7 +115,7 @@ public class AnalisadorLexico {
                         estado = S2;
                     } else {
                         token = new Token();
-                        
+
                         retroceder();
                         estado = S0;
                         token.setCode(Token.NUMERO_INTEIRO);
@@ -138,12 +151,12 @@ public class AnalisadorLexico {
                     }
                     break;
                 case S4: // Operador Aritmetico (+, -, /)
-                        token = new Token();
-                        estado = S0;
-                        token.setCode(Token.OPERADOR_ARIT);
-                        token.setSymbol(symbol);
-                        symbol = "";
-                        return token;
+                    token = new Token();
+                    estado = S0;
+                    token.setCode(Token.OPERADOR_ARIT);
+                    token.setSymbol(symbol);
+                    symbol = "";
+                    return token;
 
                 case S5: // Operador Aritmetico (*)
                     c = nextChar();
@@ -167,14 +180,14 @@ public class AnalisadorLexico {
                     token.setCode(Token.OPERADOR_ARIT);
                     token.setSymbol(symbol);
                     symbol = "";
-                    return token;     
+                    return token;
                 case S7:
                     c = nextChar();
-                    
-                    if(isAlpha(c)){
+
+                    if (isAlpha(c)) {
                         symbol += c;
                         estado = S7;
-                    }else{
+                    } else {
                         token = new Token();
                         retroceder();
                         estado = S0;

@@ -4,28 +4,58 @@ import java.util.List;
 
 public class AnalisadorSintatico {
 
-    List<Token> _tokens;
-    TreeNode<String> _root;
+    private List<Token> _tokens;
+    private int i;
 
     public AnalisadorSintatico(List<Token> tokens) {
         _tokens = tokens;
-        _root = new TreeNode<>("root");
+        i = 0;
     }
 
-    public TreeNode<String>  Analisar() {
-        return E();
+    private Token getToken(int i) {
+        if (i <= _tokens.size() - 1) {
+            return _tokens.get(i);
+        } else {
+            Token _token = new Token();
+            _token.setCode(Token.BLANK);
+            _token.setSymbol("");
+            return _token;
+        }
     }
 
-    public TreeNode<String>  E() {
-        _root.addChild(T());
-        _root.addChild(E_());
+    public void Analisar() {
+        E();
+        System.out.println("Analise Sintática concluída com sucesso.");
     }
 
-    public TreeNode<String> T() {
-
+    public void E() {
+        T();
+        E_();
     }
 
-    public TreeNode<String> E_() {
+    public void T() {
+        Token token = getToken(i);
+        int code = token.getCode();
+        if (code == Token.NUMERO_INTEIRO || code == Token.NUMERO_PONTO_FIXO || code == token.ID) {
+            i++; //Obter simbolo
+        } else {
+            throw new IllegalStateException("Token não esperado pelo Analisador Sintático: " + token.getSymbol());
+        }
+    }
 
+    public void E_() {
+        Token token = getToken(i);
+        int code = token.getCode();
+        switch (code) {
+            case Token.OPERADOR_ARIT:
+                i++;
+                T();
+                E_();
+                break;
+            case Token.BLANK:
+                return;
+            default:
+                throw new IllegalStateException("Token não esperado pelo Analisador Sintático: " + token.getSymbol());
+        }
     }
 }
